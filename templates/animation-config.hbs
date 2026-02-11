@@ -1,0 +1,193 @@
+<form class="isaf-config-form" autocomplete="off">
+
+  {{!-- Tab Navigation --}}
+  <nav class="tabs" data-group="primary">
+    <a class="item" data-tab="categories">
+      <i class="fas fa-crosshairs"></i> {{localize "ISAF.Config.Tab.Categories"}}
+    </a>
+    <a class="item" data-tab="weaponTypes">
+      <i class="fas fa-gun"></i> Weapon Types
+    </a>
+    <a class="item" data-tab="overrides">
+      <i class="fas fa-sliders-h"></i> {{localize "ISAF.Config.Tab.Overrides"}}
+    </a>
+  </nav>
+
+  <div class="tab-content">
+
+    {{!-- ==================== Categories Tab ==================== --}}
+    <div class="tab isaf-tab-content" data-tab="categories" data-group="primary">
+      <p style="color: #8899aa; font-size: 12px; margin-bottom: 8px;">
+        Override the default animation for each weapon energy category. Leave blank to use the default.
+      </p>
+
+      <table class="isaf-mapping-table">
+        <thead>
+          <tr>
+            <th style="width: 130px;">{{localize "ISAF.Config.WeaponCategory"}}</th>
+            <th>{{localize "ISAF.Config.AnimationFile"}}</th>
+            <th>{{localize "ISAF.Config.SoundFile"}}</th>
+            <th style="width: 60px;">{{localize "ISAF.Config.Preview"}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each categoryRows}}
+          <tr>
+            <td class="category-label">{{this.label}}</td>
+            <td>
+              <div class="isaf-file-picker-group">
+                <input type="text"
+                       name="cat_{{this.key}}_animation"
+                       value="{{this.customAnimation}}"
+                       placeholder="{{this.defaultAnimation}}"
+                       data-type="video" />
+                <button type="button" class="isaf-file-picker-btn" title="Browse">
+                  <i class="fas fa-file-video"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <div class="isaf-file-picker-group">
+                <input type="text"
+                       name="cat_{{this.key}}_sound"
+                       value="{{this.customSound}}"
+                       placeholder="{{this.defaultSound}}"
+                       data-type="audio" />
+                <button type="button" class="isaf-file-picker-btn" title="Browse">
+                  <i class="fas fa-file-audio"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <button type="button" class="isaf-btn-test" title="Test this animation">
+                <i class="fas fa-play"></i>
+              </button>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    {{!-- ==================== Weapon Types Tab ==================== --}}
+    <div class="tab isaf-tab-content" data-tab="weaponTypes" data-group="primary">
+      <p style="color: #8899aa; font-size: 12px; margin-bottom: 8px;">
+        Override animations by weapon class (Small Arms, Longarms, Heavy, Melee, etc.). These are used as fallbacks when no energy category match is found.
+      </p>
+
+      <table class="isaf-mapping-table">
+        <thead>
+          <tr>
+            <th style="width: 130px;">Weapon Type</th>
+            <th>{{localize "ISAF.Config.AnimationFile"}}</th>
+            <th>{{localize "ISAF.Config.SoundFile"}}</th>
+            <th style="width: 60px;">{{localize "ISAF.Config.Preview"}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each weaponTypeRows}}
+          <tr>
+            <td class="category-label">{{this.label}}</td>
+            <td>
+              <div class="isaf-file-picker-group">
+                <input type="text"
+                       name="type_{{this.key}}_animation"
+                       value="{{this.customAnimation}}"
+                       placeholder="{{this.defaultAnimation}}"
+                       data-type="video" />
+                <button type="button" class="isaf-file-picker-btn" title="Browse">
+                  <i class="fas fa-file-video"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <div class="isaf-file-picker-group">
+                <input type="text"
+                       name="type_{{this.key}}_sound"
+                       value="{{this.customSound}}"
+                       placeholder="{{this.defaultSound}}"
+                       data-type="audio" />
+                <button type="button" class="isaf-file-picker-btn" title="Browse">
+                  <i class="fas fa-file-audio"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <button type="button" class="isaf-btn-test" title="Test this animation">
+                <i class="fas fa-play"></i>
+              </button>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    {{!-- ==================== Per-Item Overrides Tab ==================== --}}
+    <div class="tab isaf-tab-content" data-tab="overrides" data-group="primary">
+      {{#if overrideRows.length}}
+        <table class="isaf-mapping-table">
+          <thead>
+            <tr>
+              <th style="width: 180px;">Item Name</th>
+              <th>{{localize "ISAF.Config.AnimationFile"}}</th>
+              <th>{{localize "ISAF.Config.SoundFile"}}</th>
+              <th style="width: 60px;">Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each overrideRows}}
+            <tr>
+              <td class="category-label">{{this.itemName}}</td>
+              <td>
+                <div class="isaf-file-picker-group">
+                  <input type="text"
+                         name="override_{{this.itemId}}_animation"
+                         value="{{this.animation}}"
+                         data-type="video" />
+                  <button type="button" class="isaf-file-picker-btn" title="Browse">
+                    <i class="fas fa-file-video"></i>
+                  </button>
+                </div>
+              </td>
+              <td>
+                <div class="isaf-file-picker-group">
+                  <input type="text"
+                         name="override_{{this.itemId}}_sound"
+                         value="{{this.sound}}"
+                         data-type="audio" />
+                  <button type="button" class="isaf-file-picker-btn" title="Browse">
+                    <i class="fas fa-file-audio"></i>
+                  </button>
+                </div>
+              </td>
+              <td>
+                <button type="button" class="btn-remove-override" data-item-id="{{this.itemId}}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      {{else}}
+        <div class="isaf-empty-state">
+          <i class="fas fa-info-circle"></i>
+          {{localize "ISAF.Config.NoOverrides"}}
+        </div>
+      {{/if}}
+    </div>
+
+  </div>
+
+  {{!-- Footer --}}
+  <footer>
+    <button type="button" class="isaf-btn-reset">
+      <i class="fas fa-undo"></i> {{localize "ISAF.Config.Reset"}}
+    </button>
+    <button type="submit" class="isaf-btn-save">
+      <i class="fas fa-save"></i> {{localize "ISAF.Config.Save"}}
+    </button>
+  </footer>
+
+</form>

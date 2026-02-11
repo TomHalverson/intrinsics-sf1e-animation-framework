@@ -1,0 +1,48 @@
+{
+  "id": "intrinsics-sf1e-animation-framework",
+  "title": "Intrinsics SF1E Animation Framework",
+  "description": "Automated weapon attack animations for Starfinder 1E. Auto-detects weapon category (laser, plasma, projectile, etc.) and plays matching animations from attacker to target using Sequencer.",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "Intrinsic"
+    }
+  ],
+  "compatibility": {
+    "minimum": "11",
+    "verified": "12"
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/main.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "sfrpg",
+        "type": "system",
+        "compatibility": {
+          "minimum": "0.25.0"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "sequencer",
+        "type": "module"
+      }
+    ]
+  },
+  "url": "https://github.com/TomHalverson/intrinsics-sf1e-animation-framework",
+  "manifest": "https://raw.githubusercontent.com/TomHalverson/intrinsics-sf1e-animation-framework/refs/heads/main/module.json",
+  "download": "https://github.com/TomHalverson/intrinsics-sf1e-animation-framework/archive/refs/heads/main.zip"
+}

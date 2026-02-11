@@ -1,0 +1,70 @@
+{
+  "ISAF.ModuleTitle": "SF1E Animation Framework",
+
+  "ISAF.Settings.Enabled.Name": "Enable Animations",
+  "ISAF.Settings.Enabled.Hint": "Master toggle for all auto-attack animations.",
+
+  "ISAF.Settings.OnlyOnHit.Name": "Only Animate on Hit",
+  "ISAF.Settings.OnlyOnHit.Hint": "If enabled, animations only play when the attack hits. If disabled, animations play on every attack roll.",
+
+  "ISAF.Settings.AnimationScale.Name": "Animation Scale",
+  "ISAF.Settings.AnimationScale.Hint": "Global scale multiplier for all animations (0.1 - 3.0).",
+
+  "ISAF.Settings.AnimationSpeed.Name": "Animation Speed",
+  "ISAF.Settings.AnimationSpeed.Hint": "Speed multiplier for projectile travel (0.5 = half speed, 2.0 = double speed).",
+
+  "ISAF.Settings.MissAnimation.Name": "Show Miss Effect",
+  "ISAF.Settings.MissAnimation.Hint": "When 'Only Animate on Hit' is disabled, show a modified animation for misses (reduced opacity, offset target).",
+
+  "ISAF.Settings.SoundEnabled.Name": "Enable Sounds",
+  "ISAF.Settings.SoundEnabled.Hint": "Play sound effects alongside weapon animations.",
+
+  "ISAF.Settings.SoundVolume.Name": "Sound Volume",
+  "ISAF.Settings.SoundVolume.Hint": "Volume level for animation sound effects (0.0 - 1.0).",
+
+  "ISAF.Settings.CustomMappings.Name": "Custom Animation Mappings",
+  "ISAF.Settings.CustomMappings.Hint": "JSON overrides for weapon-to-animation mappings. Advanced users only.",
+
+  "ISAF.Settings.OpenConfig.Name": "Animation Configuration",
+  "ISAF.Settings.OpenConfig.Hint": "Open the animation mapping configuration panel.",
+  "ISAF.Settings.OpenConfig.Label": "Configure Animations",
+
+  "ISAF.Settings.DebugMode.Name": "Debug Mode",
+  "ISAF.Settings.DebugMode.Hint": "Log detailed animation resolution info to the console for troubleshooting.",
+
+  "ISAF.Config.Title": "SF1E Animation Configuration",
+  "ISAF.Config.WeaponCategory": "Weapon Category",
+  "ISAF.Config.AnimationFile": "Animation File",
+  "ISAF.Config.SoundFile": "Sound File",
+  "ISAF.Config.Preview": "Preview",
+  "ISAF.Config.Reset": "Reset to Defaults",
+  "ISAF.Config.Save": "Save",
+  "ISAF.Config.TestAnimation": "Test",
+  "ISAF.Config.Tab.Categories": "By Category",
+  "ISAF.Config.Tab.DamageTypes": "By Damage Type",
+  "ISAF.Config.Tab.Overrides": "Item Overrides",
+  "ISAF.Config.NoOverrides": "No per-item overrides configured. Right-click a weapon in a character sheet to add an override.",
+  "ISAF.Config.CategoryLabel.laser": "Laser",
+  "ISAF.Config.CategoryLabel.plasma": "Plasma",
+  "ISAF.Config.CategoryLabel.projectile": "Projectile",
+  "ISAF.Config.CategoryLabel.flame": "Flame",
+  "ISAF.Config.CategoryLabel.cryo": "Cryo",
+  "ISAF.Config.CategoryLabel.shock": "Shock",
+  "ISAF.Config.CategoryLabel.sonic": "Sonic",
+  "ISAF.Config.CategoryLabel.disintegrator": "Disintegrator",
+  "ISAF.Config.CategoryLabel.disruption": "Disruption",
+  "ISAF.Config.CategoryLabel.uncategorized": "Uncategorized",
+  "ISAF.Config.CategoryLabel.basicM": "Basic Melee",
+  "ISAF.Config.CategoryLabel.advancedM": "Advanced Melee",
+  "ISAF.Config.CategoryLabel.smallA": "Small Arms",
+  "ISAF.Config.CategoryLabel.longA": "Longarms",
+  "ISAF.Config.CategoryLabel.heavy": "Heavy Weapons",
+  "ISAF.Config.CategoryLabel.sniper": "Sniper Weapons",
+  "ISAF.Config.CategoryLabel.grenade": "Grenades",
+  "ISAF.Config.CategoryLabel.special": "Special Weapons",
+  "ISAF.Config.CategoryLabel.solarian": "Solarian Weapons",
+
+  "ISAF.Notifications.SequencerMissing": "SF1E Animation Framework requires the Sequencer module to be installed and active.",
+  "ISAF.Notifications.AnimationPlayed": "Playing animation: {animation}",
+  "ISAF.Notifications.NoAnimationFound": "No animation mapping found for weapon category: {category}"
+}
