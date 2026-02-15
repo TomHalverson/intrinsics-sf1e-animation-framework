@@ -2,10 +2,15 @@
 // Intrinsics SF1E Animation Framework
 // Animation Engine — plays animations via
 // Sequencer based on weapon attack data.
+//
+// Animations are JS scripts or Foundry macros,
+// NOT video files. Scripts live in animations/
+// and macros are user-defined overrides.
 // ============================================
 
 import { MODULE_ID, getSetting } from './settings.js';
 import { extractWeaponInfo, resolveAnimation, getAttackMode } from './weapon-resolver.js';
+import { executeAnimationScript, executeMacroOverride } from './animation-script-loader.js';
 
 /**
  * AnimationEngine handles intercepting attack rolls from the sfrpg system
@@ -155,6 +160,10 @@ export class AnimationEngine {
 
   /**
    * Resolve and play the animation for a weapon attack.
+   * Supports three modes:
+   *   1. Macro override — a Foundry macro builds the entire animation
+   *   2. Animation script — a JS file in animations/ builds the sequence
+   *   3. JB2A fallback — direct Sequencer file path (legacy behaviour)
    *
    * @param {Actor} actor  - The attacking actor
    * @param {Item}  item   - The weapon item
@@ -203,8 +212,10 @@ export class AnimationEngine {
       console.log(`[ISAF] Playing animation:`, {
         weapon: weaponInfo.itemName,
         category: weaponInfo.weaponCategory,
-        animation: animData.animation,
         mode: attackMode,
+        macro: animData.macro ?? null,
+        script: animData.script ?? null,
+        animation: animData.animation ?? null,
         scale: finalScale,
         speed: finalSpeed,
         targets: targets.length,
@@ -215,17 +226,49 @@ export class AnimationEngine {
     // 6. Play the animation for each target
     for (const targetToken of targets) {
       try {
-        await this._playSequencerAnimation({
+        const context = {
           sourceToken,
           targetToken,
-          animData,
+          isHit,
+          scale: finalScale,
+          speed: finalSpeed,
           attackMode,
-          finalScale,
-          finalSpeed,
-          soundEnabled,
+          weaponInfo,
           soundVolume,
-          isHit
-        });
+          soundEnabled
+        };
+
+        // Priority: macro override → animation script → legacy file path
+        if (animData.macro) {
+          // User has set a macro override
+          const success = await executeMacroOverride(animData.macro, context);
+          if (!success && debug) {
+            console.warn(`[ISAF] Macro override failed: ${animData.macro}, falling back.`);
+          }
+          if (success) continue;
+        }
+
+        if (animData.script) {
+          // Default: run the JS animation script
+          const success = await executeAnimationScript(animData.script, context);
+          if (success) continue;
+          if (debug) console.log(`[ISAF] Script not found: ${animData.script}, trying legacy/JB2A path.`);
+        }
+
+        // Fallback: legacy Sequencer file path (JB2A or direct .webm)
+        if (animData.animation) {
+          await this._playSequencerAnimation({
+            sourceToken,
+            targetToken,
+            animData,
+            attackMode,
+            finalScale,
+            finalSpeed,
+            soundEnabled,
+            soundVolume,
+            isHit
+          });
+        }
       } catch (err) {
         console.error(`[ISAF] Error playing animation:`, err);
       }

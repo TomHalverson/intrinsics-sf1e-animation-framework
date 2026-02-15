@@ -1,78 +1,134 @@
-# Animation Files
+# Animation Scripts
 
-Place your `.webm` animation files in the subdirectories here.
-Each subdirectory corresponds to a weapon category or type.
+Animations are **JavaScript files** (not video files). Each script exports a default
+async function that receives a Sequencer `Sequence` and an animation context object.
+
+## How It Works
+
+1. When an attack is made, the framework resolves the weapon category/type
+2. It looks up the matching `.js` script in this folder
+3. The script builds a Sequencer animation (effects, sounds, etc.)
+4. The framework plays the sequence
+
+**Macro Overrides**: Any category or individual weapon can be overridden with a
+Foundry macro via the config UI or right-click menu. Macros receive the same
+context variables.
+
+## Script Format
+
+Each script must export a default async function:
+
+```js
+// animations/laser/laser.js
+export default async function laser(seq, context) {
+  // seq     — a Sequencer Sequence instance (add effects/sounds to it)
+  // context — { sourceToken, targetToken, isHit, scale, speed, attackMode,
+  //             weaponInfo, soundVolume, soundEnabled }
+
+  const effect = seq.effect()
+    .file('jb2a.laser_beam.01.red')
+    .atLocation(context.sourceToken)
+    .stretchTo(context.targetToken)
+    .scale(context.scale)
+    .speed(context.speed)
+    .zIndex(10);
+
+  if (!context.isHit) {
+    effect.opacity(0.5).missed();
+  }
+
+  // Optionally add sound
+  if (context.soundEnabled) {
+    seq.sound()
+      .file('modules/intrinsics-sf1e-animation-framework/animations/laser/laser_fire.ogg')
+      .volume(context.soundVolume);
+  }
+}
+```
+
+The framework creates the `Sequence` and calls `.play()` after your function returns.
+You just need to add effects and sounds to the sequence.
+
+## Context Object
+
+| Property       | Type    | Description                                      |
+|----------------|---------|--------------------------------------------------|
+| `sourceToken`  | Token   | The attacking token on the canvas                |
+| `targetToken`  | Token   | The target token on the canvas                   |
+| `isHit`        | boolean | Whether the attack roll hit                      |
+| `scale`        | number  | Final scale (includes global multiplier)         |
+| `speed`        | number  | Final speed in ms (includes global multiplier)   |
+| `attackMode`   | string  | `'melee'` or `'ranged'`                          |
+| `weaponInfo`   | object  | Full weapon metadata (category, type, damage, etc.) |
+| `soundVolume`  | number  | 0.0 to 1.0                                       |
+| `soundEnabled` | boolean | Whether the user has sounds enabled              |
+
+## Macro Override Format
+
+When creating a Foundry macro to override an animation, the macro receives
+the same context variables as scope:
+
+```js
+// Example Foundry Macro
+const seq = new Sequence('intrinsics-sf1e-animation-framework');
+seq.effect()
+  .file('jb2a.fire_bolt.orange')
+  .atLocation(sourceToken)
+  .stretchTo(targetToken)
+  .scale(scale)
+  .speed(speed);
+
+if (soundEnabled) {
+  seq.sound()
+    .file('path/to/custom_sound.ogg')
+    .volume(soundVolume);
+}
+
+await seq.play();
+```
 
 ## Directory Structure
 
 ```
 animations/
 ├── laser/           → Laser weapon animations
-│   ├── laser_beam.webm
-│   └── laser_fire.ogg
+│   └── laser.js
 ├── plasma/          → Plasma weapon animations
-│   ├── plasma_bolt.webm
-│   └── plasma_fire.ogg
+│   └── plasma.js
 ├── projectile/      → Projectile/ballistic weapon animations
-│   ├── bullet.webm
-│   ├── heavy_round.webm
-│   ├── sniper_round.webm
-│   ├── gunshot.ogg
-│   ├── pistol_fire.ogg
-│   ├── rifle_fire.ogg
-│   ├── heavy_fire.ogg
-│   └── sniper_fire.ogg
+│   ├── projectile.js
+│   ├── small_arms.js
+│   ├── longarms.js
+│   ├── heavy.js
+│   └── sniper.js
 ├── flame/           → Flame weapon animations
-│   ├── flame_jet.webm
-│   └── flame_burst.ogg
+│   └── flame.js
 ├── cryo/            → Cryo weapon animations
-│   ├── cryo_beam.webm
-│   └── cryo_fire.ogg
+│   └── cryo.js
 ├── shock/           → Shock/electric weapon animations
-│   ├── shock_arc.webm
-│   └── shock_zap.ogg
+│   └── shock.js
 ├── sonic/           → Sonic weapon animations
-│   ├── sonic_wave.webm
-│   └── sonic_blast.ogg
+│   └── sonic.js
 ├── disintegrator/   → Disintegrator weapon animations
-│   ├── disintegrate_beam.webm
-│   └── disintegrate.ogg
+│   └── disintegrator.js
 ├── disruption/      → Disruption weapon animations
-│   ├── disruption_pulse.webm
-│   └── disruption.ogg
+│   └── disruption.js
 ├── melee/           → Melee weapon animations
-│   ├── basic_melee.webm
-│   ├── advanced_melee.webm
-│   ├── melee_swing.ogg
-│   └── melee_heavy.ogg
+│   ├── basic_melee.js
+│   └── advanced_melee.js
 ├── grenade/         → Grenade animations
-│   ├── grenade_toss.webm
-│   └── grenade_throw.ogg
+│   └── grenade.js
 ├── solarian/        → Solarian weapon animations
-│   ├── solar_strike.webm
-│   └── solar_fire.ogg
+│   └── solarian.js
 └── generic/         → Generic fallback animations
-    ├── energy_bolt.webm
-    ├── acid_bolt.webm
-    └── energy_fire.ogg
+    └── generic.js
 ```
-
-## Animation Requirements
-
-- **Format**: `.webm` (VP9 codec recommended, with alpha channel for transparency)
-- **Orientation**: Horizontal, pointing **left to right** — Sequencer will rotate to match attacker→target direction
-- **Resolution**: 800×200 or similar aspect ratio for projectile beams; square for melee/impact effects
-- **Duration**: 0.5 – 2.0 seconds recommended
-- **Background**: Transparent (alpha channel)
-
-## Sound Requirements
-
-- **Format**: `.ogg` (Vorbis) or `.mp3`
-- **Duration**: Match the animation length
-- **Normalization**: Keep volume levels consistent across files
 
 ## JB2A Fallback
 
-If you have JB2A (Jules & Ben's Animated Assets) installed, the framework will automatically
-fall back to JB2A animations when custom animation files are not found. No `.webm` files needed
-in that case — just install JB2A and the framework handles the rest.
+The default scripts use JB2A (Jules & Ben's Animated Assets) database paths.
+If you have JB2A installed, the animations will work out of the box.
+If not, the framework falls back to built-in JB2A path lookups.
+
+You can replace any script with your own effects — use `.webm` files,
+custom Sequencer database paths, or any other Sequencer-compatible source.

@@ -5,10 +5,15 @@
 
 import { MODULE_ID, getSetting, setSetting } from './settings.js';
 import { CATEGORY_ANIMATIONS, WEAPON_TYPE_ANIMATIONS, DAMAGE_TYPE_ANIMATIONS, getModulePath } from './animation-map.js';
+import { clearScriptCache } from './animation-script-loader.js';
 
 /**
  * FormApplication for configuring animation mappings.
  * Accessible via module settings → "Configure Animations" button.
+ *
+ * The default animation for each category is a JS script in the
+ * animations/ folder. Users can override any category or individual
+ * item with a Foundry macro.
  */
 export class AnimationConfigApp extends FormApplication {
 
@@ -31,14 +36,17 @@ export class AnimationConfigApp extends FormApplication {
     const customMappings = this._getCustomMappings();
     const itemOverrides = this._getItemOverrides();
 
+    // Build macro list for dropdowns
+    const macros = game.macros.contents
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(m => ({ id: m.id, name: m.name }));
+
     // Build category rows
     const categoryRows = Object.entries(CATEGORY_ANIMATIONS).map(([key, data]) => ({
       key,
       label: game.i18n.localize(`ISAF.Config.CategoryLabel.${key}`),
-      defaultAnimation: data.animation,
-      defaultSound: data.sound ?? '',
-      customAnimation: customMappings[key]?.animation ?? '',
-      customSound: customMappings[key]?.sound ?? '',
+      defaultScript: data.script,
+      macroOverride: customMappings[key]?.macro ?? '',
       scale: customMappings[key]?.scale ?? data.scale ?? 1.0,
       speed: customMappings[key]?.speed ?? data.speed ?? 800
     }));
@@ -47,28 +55,30 @@ export class AnimationConfigApp extends FormApplication {
     const weaponTypeRows = Object.entries(WEAPON_TYPE_ANIMATIONS).map(([key, data]) => ({
       key,
       label: game.i18n.localize(`ISAF.Config.CategoryLabel.${key}`),
-      defaultAnimation: data.animation,
-      defaultSound: data.sound ?? '',
-      customAnimation: customMappings[`type_${key}`]?.animation ?? '',
-      customSound: customMappings[`type_${key}`]?.sound ?? '',
+      defaultScript: data.script,
+      macroOverride: customMappings[`type_${key}`]?.macro ?? '',
       scale: customMappings[`type_${key}`]?.scale ?? data.scale ?? 1.0,
       speed: customMappings[`type_${key}`]?.speed ?? data.speed ?? 800
     }));
 
     // Build item override rows
-    const overrideRows = Object.entries(itemOverrides).map(([itemId, data]) => ({
-      itemId,
-      itemName: data.itemName ?? itemId,
-      animation: data.animation ?? '',
-      sound: data.sound ?? '',
-      scale: data.scale ?? 1.0,
-      speed: data.speed ?? 800
-    }));
+    const overrideRows = Object.entries(itemOverrides).map(([itemId, data]) => {
+      const macroName = data.macro ? (game.macros.get(data.macro)?.name ?? data.macro) : '';
+      return {
+        itemId,
+        itemName: data.itemName ?? itemId,
+        macro: data.macro ?? '',
+        macroName,
+        scale: data.scale ?? 1.0,
+        speed: data.speed ?? 800
+      };
+    });
 
     return {
       categoryRows,
       weaponTypeRows,
       overrideRows,
+      macros,
       modulePath: getModulePath()
     };
   }
@@ -77,9 +87,9 @@ export class AnimationConfigApp extends FormApplication {
   async _updateObject(event, formData) {
     const customMappings = {};
 
-    // Process form data — fields are named like "cat_{key}_animation", "cat_{key}_sound", etc.
+    // Process form data — fields are named like "cat_{key}_macro", "cat_{key}_scale", etc.
     for (const [field, value] of Object.entries(formData)) {
-      const catMatch = field.match(/^cat_(.+?)_(animation|sound|scale|speed)$/);
+      const catMatch = field.match(/^cat_(.+?)_(macro|scale|speed)$/);
       if (catMatch) {
         const [, key, prop] = catMatch;
         if (!customMappings[key]) customMappings[key] = {};
@@ -87,7 +97,7 @@ export class AnimationConfigApp extends FormApplication {
         continue;
       }
 
-      const typeMatch = field.match(/^type_(.+?)_(animation|sound|scale|speed)$/);
+      const typeMatch = field.match(/^type_(.+?)_(macro|scale|speed)$/);
       if (typeMatch) {
         const [, key, prop] = typeMatch;
         const mappingKey = `type_${key}`;
@@ -97,9 +107,9 @@ export class AnimationConfigApp extends FormApplication {
       }
     }
 
-    // Remove entries where the custom animation is empty (user cleared the override)
+    // Remove entries where no macro override is set (user cleared the override)
     for (const [key, data] of Object.entries(customMappings)) {
-      if (!data.animation) delete customMappings[key];
+      if (!data.macro) delete customMappings[key];
     }
 
     await setSetting('customMappings', JSON.stringify(customMappings));
@@ -116,6 +126,7 @@ export class AnimationConfigApp extends FormApplication {
       ev.preventDefault();
       await setSetting('customMappings', '{}');
       await setSetting('itemOverrides', '{}');
+      clearScriptCache();
       this.render(true);
       ui.notifications.info('Animation mappings reset to defaults.');
     });
@@ -123,9 +134,16 @@ export class AnimationConfigApp extends FormApplication {
     // Test buttons
     html.find('.isaf-btn-test').on('click', (ev) => {
       ev.preventDefault();
-      const animationPath = ev.currentTarget.closest('tr')?.querySelector('input[name$="_animation"]')?.value;
-      if (animationPath) {
-        this._testAnimation(animationPath);
+      const row = ev.currentTarget.closest('tr');
+      const macroId = row?.querySelector('select[name$="_macro"]')?.value;
+      const scriptPath = row?.querySelector('.isaf-default-script')?.dataset?.script;
+
+      if (macroId) {
+        this._testMacro(macroId);
+      } else if (scriptPath) {
+        this._testScript(scriptPath);
+      } else {
+        ui.notifications.warn('No animation script or macro to test.');
       }
     });
 
@@ -141,29 +159,57 @@ export class AnimationConfigApp extends FormApplication {
       }
     });
 
-    // File picker buttons
-    html.find('.isaf-file-picker-btn').on('click', (ev) => {
+    // Refresh script cache button
+    html.find('.isaf-btn-refresh-cache').on('click', (ev) => {
       ev.preventDefault();
-      const input = ev.currentTarget.previousElementSibling;
-      if (!input) return;
-
-      const fp = new FilePicker({
-        type: input.dataset.type ?? 'video',
-        current: input.value,
-        callback: (path) => {
-          input.value = path;
-          input.dispatchEvent(new Event('change'));
-        }
-      });
-      fp.browse();
+      clearScriptCache();
+      ui.notifications.info('Animation script cache cleared. Scripts will be re-loaded on next use.');
     });
   }
 
   /**
-   * Test-play an animation on a controlled token.
-   * @param {string} animationPath
+   * Test a macro by executing it with the controlled token.
+   * @param {string} macroId
    */
-  _testAnimation(animationPath) {
+  async _testMacro(macroId) {
+    const macro = game.macros.get(macroId);
+    if (!macro) {
+      ui.notifications.error('Macro not found.');
+      return;
+    }
+
+    const token = canvas.tokens.controlled[0];
+    if (!token) {
+      ui.notifications.warn('Select a token on the canvas to test the animation.');
+      return;
+    }
+
+    try {
+      const seq = new Sequence(MODULE_ID);
+      await macro.execute({
+        sourceToken: token,
+        targetToken: token,
+        isHit: true,
+        scale: 1.0,
+        speed: 800,
+        attackMode: 'ranged',
+        weaponInfo: {},
+        soundVolume: 0.5,
+        soundEnabled: true,
+        Sequence,
+        MODULE_ID
+      });
+    } catch (err) {
+      console.error('[ISAF] Macro test error:', err);
+      ui.notifications.error('Error executing macro. Check console.');
+    }
+  }
+
+  /**
+   * Test-play an animation script on a controlled token.
+   * @param {string} scriptPath
+   */
+  async _testScript(scriptPath) {
     if (typeof Sequence === 'undefined') {
       ui.notifications.error('Sequencer module is required to preview animations.');
       return;
@@ -175,12 +221,26 @@ export class AnimationConfigApp extends FormApplication {
       return;
     }
 
-    new Sequence(MODULE_ID)
-      .effect()
-      .file(animationPath)
-      .atLocation(token)
-      .scale(1.0)
-      .play();
+    try {
+      const { executeAnimationScript } = await import('./animation-script-loader.js');
+      const success = await executeAnimationScript(scriptPath, {
+        sourceToken: token,
+        targetToken: token,
+        isHit: true,
+        scale: 1.0,
+        speed: 800,
+        attackMode: 'ranged',
+        weaponInfo: {},
+        soundVolume: 0.5,
+        soundEnabled: true
+      });
+      if (!success) {
+        ui.notifications.warn(`Animation script not found: ${scriptPath}`);
+      }
+    } catch (err) {
+      console.error('[ISAF] Script test error:', err);
+      ui.notifications.error('Error executing script. Check console.');
+    }
   }
 
   /**

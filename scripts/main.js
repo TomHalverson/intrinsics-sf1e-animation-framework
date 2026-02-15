@@ -7,22 +7,28 @@
 // matching animations from attacker → target
 // using Sequencer.
 //
+// Animations are JS scripts (not video files).
+// Each script exports a function that builds a
+// Sequencer sequence. Overrides can point to
+// Foundry macros instead.
+//
 // Hook priority:
 //   1. sfrpg 'attackRolled' hook (preferred)
 //   2. 'createChatMessage' fallback
 //
 // Animation resolution priority:
-//   1. Per-item override
-//   2. Custom category mapping (user config)
-//   3. Default weapon category animation
-//   4. Default weapon type animation
-//   5. Damage type animation
+//   1. Per-item macro override
+//   2. Custom category macro override (user config)
+//   3. Default category animation script (.js)
+//   4. Default weapon type animation script (.js)
+//   5. Damage type animation script (.js)
 //   6. JB2A fallback
 // ============================================
 
 import { MODULE_ID, registerSettings, getSetting, setSetting } from './settings.js';
 import { AnimationEngine } from './animation-engine.js';
 import { extractWeaponInfo, resolveAnimation } from './weapon-resolver.js';
+import { clearScriptCache } from './animation-script-loader.js';
 
 let engine = null;
 
@@ -85,9 +91,9 @@ function _registerItemContextMenu() {
     if (!item || item.type !== 'weapon') return;
 
     buttons.unshift({
-      label: 'Set Animation',
+      label: 'Set Animation Override',
       class: 'isaf-set-animation',
-      icon: 'fas fa-film',
+      icon: 'fas fa-wand-magic-sparkles',
       onclick: () => _openItemOverrideDialog(item)
     });
   });
@@ -101,20 +107,28 @@ async function _openItemOverrideDialog(item) {
   const overrides = _getItemOverrides();
   const existing = overrides[item.uuid] ?? {};
 
+  // Build macro dropdown options from available macros
+  const macros = game.macros.contents
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const macroOptions = macros
+    .map(m => `<option value="${m.id}" ${existing.macro === m.id ? 'selected' : ''}>${m.name}</option>`)
+    .join('');
+
   const content = `
     <form>
+      <p style="color: #8899aa; font-size: 12px; margin-bottom: 10px;">
+        Set a Foundry macro to override this weapon's animation.
+        The macro receives <code>sourceToken</code>, <code>targetToken</code>,
+        <code>isHit</code>, <code>scale</code>, <code>speed</code>, and
+        <code>Sequence</code> as scope variables.
+      </p>
       <div class="form-group">
-        <label>Animation File</label>
+        <label>Override Macro</label>
         <div class="form-fields">
-          <input type="text" name="animation" value="${existing.animation ?? ''}"
-                 placeholder="Path to .webm animation file or JB2A database path" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Sound File</label>
-        <div class="form-fields">
-          <input type="text" name="sound" value="${existing.sound ?? ''}"
-                 placeholder="Path to .ogg / .mp3 sound file (optional)" />
+          <select name="macro">
+            <option value="">— No override (use default script) —</option>
+            ${macroOptions}
+          </select>
         </div>
       </div>
       <div class="form-group">
@@ -140,27 +154,25 @@ async function _openItemOverrideDialog(item) {
         label: 'Save',
         icon: '<i class="fas fa-save"></i>',
         callback: async (html) => {
-          const animation = html.find('[name="animation"]').val().trim();
-          const sound = html.find('[name="sound"]').val().trim();
+          const macro = html.find('[name="macro"]').val().trim();
           const scale = parseFloat(html.find('[name="scale"]').val()) || 1.0;
           const speed = parseInt(html.find('[name="speed"]').val()) || 800;
 
-          if (animation) {
+          if (macro) {
             overrides[item.uuid] = {
-              animation,
-              sound: sound || null,
+              macro,
               scale,
               speed,
               type: (item.system.actionType === 'mwak' || item.system.actionType === 'msak') ? 'melee' : 'ranged',
               itemName: item.name
             };
           } else {
-            // Clear override if animation is empty
+            // Clear override if no macro selected
             delete overrides[item.uuid];
           }
 
           await setSetting('itemOverrides', JSON.stringify(overrides));
-          ui.notifications.info(`Animation override ${animation ? 'saved' : 'cleared'} for ${item.name}.`);
+          ui.notifications.info(`Animation override ${macro ? 'saved' : 'cleared'} for ${item.name}.`);
         }
       },
       clear: {
@@ -248,6 +260,12 @@ Hooks.once('ready', () => {
         const info = extractWeaponInfo(item);
         return resolveAnimation(info);
       },
+
+      /**
+       * Clear the animation script cache.
+       * Useful after editing animation scripts without reloading.
+       */
+      clearScriptCache,
 
       /** The animation engine instance */
       engine

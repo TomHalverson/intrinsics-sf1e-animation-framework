@@ -210,7 +210,7 @@
   font-style: italic;
 }
 
-/* --- File Picker Integration --- */
+/* --- Legacy File Picker (kept for potential future use) --- */
 .isaf-file-picker-group {
   display: flex;
   gap: 4px;
@@ -219,21 +219,6 @@
 
 .isaf-file-picker-group input {
   flex: 1;
-}
-
-.isaf-file-picker-btn {
-  background: #16213e;
-  color: #8899aa;
-  border: 1px solid #1a3a5c;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.isaf-file-picker-btn:hover {
-  background: #1a3a5c;
-  color: #00d4ff;
 }
 
 /* --- Scrollable Tab Content --- */
@@ -259,6 +244,76 @@
 
 .isaf-tab-content::-webkit-scrollbar-thumb:hover {
   background: #0f3460;
+}
+
+/* --- Macro Select Dropdown --- */
+.isaf-macro-select {
+  width: 100%;
+  background: #0d1b2a;
+  border: 1px solid #1a3a5c;
+  color: #e0e0e0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.isaf-macro-select:focus {
+  border-color: #00d4ff;
+  outline: none;
+}
+
+/* --- Default Script Path Display --- */
+.isaf-default-script {
+  display: inline-block;
+  color: #5a7a9a;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-style: italic;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  word-break: break-all;
+}
+
+.isaf-default-script i {
+  color: #00d4ff;
+  margin-right: 4px;
+}
+
+/* --- Macro Reference in Override List --- */
+.isaf-macro-ref {
+  color: #c0d0e0;
+  font-size: 12px;
+}
+
+.isaf-macro-ref i {
+  color: #ffd700;
+  margin-right: 4px;
+}
+
+.isaf-no-macro {
+  color: #4a5a6a;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* --- Refresh Cache Button --- */
+.isaf-btn-refresh-cache {
+  background: #1a3a2a;
+  color: #00ff88;
+  border: 1px solid #2a5a3a;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.isaf-btn-refresh-cache:hover {
+  background: #2a5a3a;
+  border-color: #00ff88;
 }
 
 /* --- Status Indicator --- */

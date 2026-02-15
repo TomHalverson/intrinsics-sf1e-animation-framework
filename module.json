@@ -1,7 +1,7 @@
 {
   "id": "intrinsics-sf1e-animation-framework",
   "title": "Intrinsics SF1E Animation Framework",
-  "description": "Automated weapon attack animations for Starfinder 1E. Auto-detects weapon category (laser, plasma, projectile, etc.) and plays matching animations from attacker to target using Sequencer.",
+  "description": "Automated weapon attack animations for Starfinder 1E. Auto-detects weapon category (laser, plasma, projectile, etc.) and runs matching JS animation scripts via Sequencer. Override any animation with a Foundry macro.",
   "version": "1.0.0",
   "authors": [
     {

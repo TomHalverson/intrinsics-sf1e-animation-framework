@@ -14,16 +14,16 @@
   "ISAF.Settings.AnimationSpeed.Hint": "Speed multiplier for projectile travel (0.5 = half speed, 2.0 = double speed).",
 
   "ISAF.Settings.MissAnimation.Name": "Show Miss Effect",
-  "ISAF.Settings.MissAnimation.Hint": "When 'Only Animate on Hit' is disabled, show a modified animation for misses (reduced opacity, offset target).",
+  "ISAF.Settings.MissAnimation.Hint": "When 'Only Animate on Hit' is enabled, show a modified animation for misses (reduced opacity, offset target).",
 
   "ISAF.Settings.SoundEnabled.Name": "Enable Sounds",
-  "ISAF.Settings.SoundEnabled.Hint": "Play sound effects alongside weapon animations.",
+  "ISAF.Settings.SoundEnabled.Hint": "Allow animation scripts to play sound effects.",
 
   "ISAF.Settings.SoundVolume.Name": "Sound Volume",
-  "ISAF.Settings.SoundVolume.Hint": "Volume level for animation sound effects (0.0 - 1.0).",
+  "ISAF.Settings.SoundVolume.Hint": "Volume level passed to animation scripts (0.0 - 1.0).",
 
-  "ISAF.Settings.CustomMappings.Name": "Custom Animation Mappings",
-  "ISAF.Settings.CustomMappings.Hint": "JSON overrides for weapon-to-animation mappings. Advanced users only.",
+  "ISAF.Settings.CustomMappings.Name": "Custom Macro Overrides",
+  "ISAF.Settings.CustomMappings.Hint": "JSON overrides mapping weapon categories to Foundry macros. Managed via config UI.",
 
   "ISAF.Settings.OpenConfig.Name": "Animation Configuration",
   "ISAF.Settings.OpenConfig.Hint": "Open the animation mapping configuration panel.",
@@ -34,16 +34,16 @@
 
   "ISAF.Config.Title": "SF1E Animation Configuration",
   "ISAF.Config.WeaponCategory": "Weapon Category",
-  "ISAF.Config.AnimationFile": "Animation File",
-  "ISAF.Config.SoundFile": "Sound File",
-  "ISAF.Config.Preview": "Preview",
+  "ISAF.Config.DefaultScript": "Default Script",
+  "ISAF.Config.MacroOverride": "Macro Override",
+  "ISAF.Config.Preview": "Test",
   "ISAF.Config.Reset": "Reset to Defaults",
   "ISAF.Config.Save": "Save",
   "ISAF.Config.TestAnimation": "Test",
   "ISAF.Config.Tab.Categories": "By Category",
   "ISAF.Config.Tab.DamageTypes": "By Damage Type",
   "ISAF.Config.Tab.Overrides": "Item Overrides",
-  "ISAF.Config.NoOverrides": "No per-item overrides configured. Right-click a weapon in a character sheet to add an override.",
+  "ISAF.Config.NoOverrides": "No per-item macro overrides configured. Right-click a weapon in a character sheet to assign a macro override.",
   "ISAF.Config.CategoryLabel.laser": "Laser",
   "ISAF.Config.CategoryLabel.plasma": "Plasma",
   "ISAF.Config.CategoryLabel.projectile": "Projectile",

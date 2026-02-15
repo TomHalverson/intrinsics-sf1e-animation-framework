@@ -78,13 +78,20 @@ export function getAttackMode(info) {
 
 /**
  * Resolve the animation data for a weapon, checking (in priority order):
- *   1. Per-item override (stored in settings)
- *   2. Custom category mapping (stored in settings)
- *   3. Default category animation
- *   4. Default weapon type animation
- *   5. Damage type animation
+ *   1. Per-item macro override (stored in settings)
+ *   2. Custom category macro override (stored in settings)
+ *   3. Default category animation script (.js)  ← skips "uncategorized"
+ *   4. Default weapon type animation script (.js)
+ *  4b. "uncategorized" category fallback
+ *   5. Damage type animation script (.js)
  *   6. JB2A fallback (if JB2A is installed)
  *   7. null (no animation found)
+ *
+ * Returned object may contain:
+ *   - macro:     Foundry macro name/ID (if override)
+ *   - script:    Path to JS animation script (default)
+ *   - animation: Legacy Sequencer/JB2A file path (fallback)
+ *   - type, scale, speed, etc.
  *
  * @param {WeaponInfo} info
  * @returns {Object|null} Animation data object or null
@@ -96,45 +103,53 @@ export function resolveAnimation(info) {
     console.log(`[ISAF] Resolving animation for: ${info.itemName}`, info);
   }
 
-  // 1. Per-item override
+  // 1. Per-item macro override
   const itemOverrides = _getItemOverrides();
   if (info.itemId && itemOverrides[info.itemId]) {
     if (debug) console.log(`[ISAF] → Using per-item override for ${info.itemId}`);
     return itemOverrides[info.itemId];
   }
 
-  // 2. Custom category mapping
+  // 2. Custom category macro override
   const customMappings = _getCustomMappings();
   if (info.weaponCategory && customMappings[info.weaponCategory]) {
     if (debug) console.log(`[ISAF] → Using custom mapping for category: ${info.weaponCategory}`);
     return customMappings[info.weaponCategory];
   }
 
-  // 3. Default category animation
-  if (info.weaponCategory && CATEGORY_ANIMATIONS[info.weaponCategory]) {
+  // 3. Default category animation script
+  //    Use the weapon's energy category (laser, plasma, flame, etc.) when it's
+  //    a meaningful category. Skip "uncategorized" so melee weapons like a
+  //    survival knife (weaponType=basicM, category=uncategorized) fall through
+  //    to the weapon type check below.
+  if (info.weaponCategory && info.weaponCategory !== 'uncategorized' && CATEGORY_ANIMATIONS[info.weaponCategory]) {
     const anim = CATEGORY_ANIMATIONS[info.weaponCategory];
-    if (_animationFileExists(anim.animation)) {
-      if (debug) console.log(`[ISAF] → Using default category animation: ${info.weaponCategory}`);
-      return anim;
-    }
+    if (debug) console.log(`[ISAF] → Using default category script: ${info.weaponCategory}`);
+    return anim;
   }
 
-  // 4. Default weapon type animation
+  // 4. Default weapon type animation script
+  //    Matches the physical weapon class (basicM, advancedM, longA, smallA, etc.).
+  //    This is the primary resolver for melee weapons and the fallback for ranged
+  //    weapons whose category was "uncategorized" or missing.
   if (info.weaponType && WEAPON_TYPE_ANIMATIONS[info.weaponType]) {
     const anim = WEAPON_TYPE_ANIMATIONS[info.weaponType];
-    if (_animationFileExists(anim.animation)) {
-      if (debug) console.log(`[ISAF] → Using weapon type animation: ${info.weaponType}`);
-      return anim;
-    }
+    if (debug) console.log(`[ISAF] → Using weapon type script: ${info.weaponType}`);
+    return anim;
   }
 
-  // 5. Damage type animation
+  // 4b. "uncategorized" category fallback — only if weapon type also didn't match
+  if (info.weaponCategory === 'uncategorized' && CATEGORY_ANIMATIONS['uncategorized']) {
+    const anim = CATEGORY_ANIMATIONS['uncategorized'];
+    if (debug) console.log(`[ISAF] → Using uncategorized fallback script`);
+    return anim;
+  }
+
+  // 5. Damage type animation script
   if (info.primaryDamageType && DAMAGE_TYPE_ANIMATIONS[info.primaryDamageType]) {
     const anim = DAMAGE_TYPE_ANIMATIONS[info.primaryDamageType];
-    if (_animationFileExists(anim.animation)) {
-      if (debug) console.log(`[ISAF] → Using damage type animation: ${info.primaryDamageType}`);
-      return anim;
-    }
+    if (debug) console.log(`[ISAF] → Using damage type script: ${info.primaryDamageType}`);
+    return anim;
   }
 
   // 6. JB2A fallback
@@ -171,22 +186,6 @@ function _hasJB2A() {
     game.modules.get('JB2A_DnD5e')?.active ||
     false
   );
-}
-
-/**
- * Check if an animation file path likely exists.
- * For JB2A database paths (starting with 'jb2a.'), we assume they exist if JB2A is active.
- * For file paths, we check if the Sequencer database has it, or assume it exists
- * (actual file validation would require async fetch which we avoid here).
- * @param {string} path
- * @returns {boolean}
- */
-function _animationFileExists(path) {
-  if (!path) return false;
-  if (path.startsWith('jb2a.')) return _hasJB2A();
-  // For local file paths, we optimistically return true.
-  // Missing files will simply not play (Sequencer handles this gracefully).
-  return true;
 }
 
 /**
